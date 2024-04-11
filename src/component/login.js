@@ -1,23 +1,20 @@
 import React, { useState, useEffect } from 'react';
-//import { useDispatch } from 'react-redux';
-import axios from 'axios';
+import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../reducer/userSlice';
 
 function Login() {
 
-    //const dispatch = useDispatch()
+    const dispatch = useDispatch()
+    //const isLogin = useSelector((state) => state.userInfo.isLogin)
     
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
-    const [loginStatus, setLoginStatus] = useState(false)
-    const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("")
 
     useEffect( () => {
         if (message) {
             setTimeout( () => {
                 setMessage("")
-                setLoading(false)
             }, 1500) // 로그인 실패시 나오는 메시지를 1.5초 이후 안보이게 만든다. 
         }
     }, [message])
@@ -33,7 +30,7 @@ function Login() {
             return alert ("Password 를 입력하세요.")
         }
         
-        try{
+        try {
             await new Promise ( (r) => setTimeout(r, 1000));
             
             const response = await fetch (
@@ -53,17 +50,16 @@ function Login() {
             const result = await response.json();
 
             if (response.status === 200) {
-                setLoginStatus(false)
-                sessionStorage.setItem("token", result.token)
+                sessionStorage.setItem("name", result.name)
                 sessionStorage.setItem("email", result.email)
                 sessionStorage.setItem("role", result.role)
-                sessionStorage.setItem("name", result.name)
+                sessionStorage.setItem("token", result.token)
+                dispatch(loginUser(result))
                 setMessage("로그인 성공")
             } else {
-                setLoginStatus(true)
                 setMessage("로그인 실패")
             }
-            
+
         } catch(err) {
             setMessage("서버 실패")
         }
