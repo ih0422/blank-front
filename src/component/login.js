@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+//import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import { loginUser } from '../reducer/userSlice';
 
 function Login() {
 
-    const dispatch = useDispatch()
+    //const dispatch = useDispatch()
     
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
-
+    const [loginStatus, setLoginStatus] = useState(false)
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("")
 
@@ -18,42 +18,56 @@ function Login() {
             setTimeout( () => {
                 setMessage("")
                 setLoading(false)
-            }, 1500) // 음...? 로그인 관련 답이 올때까지 못 클릭하도록 하는게 낫지 않나? 비동기로 해야하는 이유가 있나?
-            //727
+            }, 1500) // 로그인 실패시 나오는 메시지를 1.5초 이후 안보이게 만든다. 
         }
     }, [message])
 
-    const onSubmitHandler = (event) => {
+    const loginHandler = async (event) => {
+        // email 과 pw 값이 입력되었는지 체크하고, 둘 중 하나라도 값이 없으면 alert을 return 하며 submit event를 종료한다.
         event.preventDefault();
         if (!email) {
-            return alert ("Email 을 입력하세요.")
+            return alert ("Email 을 입력하세요.") // 이게 모바일로 환경을 바꿔도 제대로 alert이 뜰까?
         } 
         
         if (!password) {
             return alert ("Password 를 입력하세요.")
         }
+        
+        try{
+            await new Promise ( (r) => setTimeout(r, 1000));
+            
+            const response = await fetch (
+                "https://858fcbf6-e20c-4d1b-a455-73aab520c820.mock.pstmn.io/api/users",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type" : "application/json",
+                    },
+                    body: JSON.stringify( {
+                        email: email,
+                        password: password,
+                    }),
+                }
+            )
 
-        console.log("EMAIL" , email);
-        console.log("PASSWORD", password);
+            const result = await response.json();
 
-        let body = {
-            email: email,
-            password: password
+            if (response.status === 200) {
+                setLoginStatus(false)
+                sessionStorage.setItem("token", result.token)
+                sessionStorage.setItem("email", result.email)
+                sessionStorage.setItem("role", result.role)
+                sessionStorage.setItem("name", result.name)
+                setMessage("로그인 성공")
+            } else {
+                setLoginStatus(true)
+                setMessage("로그인 실패")
+            }
+            
+        } catch(err) {
+            setMessage("서버 실패")
         }
 
-        axios.post("Endpoint", body)
-        .then( (res) => {
-            console.log(res.data);
-            if (res.data.code == 200) {
-                console.log("로그인");
-                dispatch(loginUser(res.data.userInfo));
-                setMessage("");
-            } else {
-                setMessage("에러발생: " + res.data.code)
-            }
-        });
-
-        setLoading(true);
     }
 
     const onEmailHandler = (event) => {
@@ -69,18 +83,20 @@ function Login() {
         <h2>(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;) 모임</h2>
         <div class="container" id="container">
         <div class="form-container sign-in-container">
-            <form onSubmit = {onSubmitHandler}>
-            <h1>Sign in</h1>
-            <div class="social-container">
-                <a href="#" class="social" id="naver"><img src="naver_login.png" alt="Naver"/></a>
-                <a href="#" class="social" id="kakao"><img src="kakao_login_large_narrow.png" alt="kakao"></img></a>
-                {/* <a href="#" class="social">Google</a> */}
-            </div>
-            <span>or use your account</span>
-            <input type="email" value={email} onChange={onEmailHandler} placeholder="Email"/>
-            <input type="password" value={password} onChange={onPasswordHandler} placeholder="Password" />
-            <a href="#">Forgot your password?</a>
-            <button>Sign In</button>
+            <form onSubmit = {loginHandler}>
+                <h1>Sign in</h1>
+                <div class="social-container">
+                    <a href="#" class="social" id="naver"><img src="naver_login.png" alt="Naver"/></a>
+                    <a href="#" class="social" id="kakao"><img src="kakao_login_large_narrow.png" alt="kakao"></img></a>
+                    {/* <a href="#" class="social">Google</a> */}
+                </div>
+                <span>or use your account</span>
+                <input type="email" value={email} onChange={onEmailHandler} placeholder="Email"/>
+                <input type="password" value={password} onChange={onPasswordHandler} placeholder="Password" />
+                <a href="#">Forgot your password?</a>
+                <button>Sign In</button>
+                <br />
+                {message}
             </form>
         </div>
         </div>
