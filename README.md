@@ -4,7 +4,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 ## Available Scripts
 
-### yarn init
+### yarn install
 - 프로젝트 디펜던시 라이브러리 설치
 
 ### yarn start
